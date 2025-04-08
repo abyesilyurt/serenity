@@ -317,6 +317,8 @@ void TreeBuilder::restructure_block_node_in_inline_parent(NodeWithStyleAndBoxMod
         before_wrapper = last_child;
     } else {
         before_wrapper = nearest_block_ancestor.create_anonymous_wrapper();
+        // Ensure the wrapper behaves like an inline block to contain the split inline content.
+        static_cast<NodeWithStyle&>(*before_wrapper).mutable_computed_values().set_display(CSS::Display::from_short(CSS::Display::Short::InlineBlock));
         before_wrapper->set_children_are_inline(true);
         nearest_block_ancestor.append_child(*before_wrapper);
     }
@@ -348,6 +350,8 @@ void TreeBuilder::restructure_block_node_in_inline_parent(NodeWithStyleAndBoxMod
     }
     if (!middle_wrapper) {
         middle_wrapper = static_cast<NodeWithStyleAndBoxModelMetrics&>(*nearest_block_ancestor.create_anonymous_wrapper());
+        // Ensure the wrapper behaves like an inline block to contain the block node causing the split.
+        middle_wrapper->mutable_computed_values().set_display(CSS::Display::from_short(CSS::Display::Short::InlineBlock));
         nearest_block_ancestor.append_child(*middle_wrapper);
         middle_wrapper->set_continuation_of_node({}, topmost_inline_ancestor);
     }
@@ -361,6 +365,8 @@ void TreeBuilder::restructure_block_node_in_inline_parent(NodeWithStyleAndBoxMod
     // any inclusive ancestor of node in the after wrapper.
     if (needs_new_continuation) {
         auto after_wrapper = nearest_block_ancestor.create_anonymous_wrapper();
+        // Ensure the wrapper behaves like an inline block to contain the continued inline content.
+        static_cast<NodeWithStyle&>(*after_wrapper).mutable_computed_values().set_display(CSS::Display::from_short(CSS::Display::Short::InlineBlock));
         GC::Ptr<Node> current_parent = after_wrapper;
         for (GC::Ptr<Node> inline_node = topmost_inline_ancestor;
             inline_node && is<DOM::Element>(inline_node->dom_node()); inline_node = inline_node->last_child()) {
